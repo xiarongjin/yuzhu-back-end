@@ -101,4 +101,55 @@ router.get("/daily/:id", function (req, res) {
   });
 });
 
+// 获取数据
+router.post("/get", function (req, res) {
+  const { part, page } = { ...req.body };
+
+  axios
+    .get(
+      `https://colourpop.com/collections/${part}?sort_by=default&page=${page}&view=json`
+    )
+    .then((body) => {
+      let arr = [];
+
+      for (let i in body.data.payload) {
+        arr.push(
+          axios.get(
+            `https://colourpop.com${body.data.payload[i].url}?view=json`
+          )
+        );
+      }
+      Promise.all(arr).then((body) => {
+        res.send(
+          body.map((i) => {
+            const {
+              title,
+              type,
+              rating,
+              header_description,
+              description,
+              display_description,
+              sale_price,
+              original_price,
+              value_price,
+              ingredients,
+            } = { ...i.data };
+            return {
+              title,
+              type,
+              rating,
+              header_description,
+              description,
+              display_description,
+              sale_price,
+              original_price,
+              value_price,
+              ingredients,
+            };
+          })
+        );
+      });
+    });
+});
+
 module.exports = router;
